@@ -1,6 +1,7 @@
 # Database Connection Guide
 
-**Last Updated:** 2025-01-27
+**Last Updated:** 2025-11-09  
+**See Also:** [RAILS_DATABASE_CONFIG.md](./RAILS_DATABASE_CONFIG.md) for Rails official documentation references
 
 ---
 
