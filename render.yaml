@@ -2,7 +2,7 @@ services:
   - type: web
     name: reed-refactor-v1-backend
     env: ruby
-    buildCommand: bundle install
+    buildCommand: bundle install --deployment --without development test
     startCommand: bundle exec puma -C config/puma.rb
     plan: starter
     region: oregon
