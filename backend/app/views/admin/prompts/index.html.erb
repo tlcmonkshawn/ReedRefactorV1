@@ -1,0 +1,54 @@
+<% content_for :title, "AI Prompts Management" %>
+
+<div class="prompts-index">
+  <div class="header">
+    <h1>AI Prompts Management</h1>
+    <%= link_to "New Prompt", new_admin_prompt_path, class: "btn btn-primary" %>
+  </div>
+
+  <% if @categories.any? %>
+    <% @categories.each do |category| %>
+      <div class="category-section">
+        <h2><%= category.humanize %></h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Model</th>
+              <th>Type</th>
+              <th>Active</th>
+              <th>Version</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @prompts.select { |p| p.category == category }.each do |prompt| %>
+              <tr>
+                <td><%= prompt.name %></td>
+                <td><code><%= prompt.model %></code></td>
+                <td><%= prompt.prompt_type || '-' %></td>
+                <td>
+                  <% if prompt.active? %>
+                    <span class="badge badge-success">Active</span>
+                  <% else %>
+                    <span class="badge badge-secondary">Inactive</span>
+                  <% end %>
+                </td>
+                <td><%= prompt.version %></td>
+                <td>
+                  <%= link_to "View", admin_prompt_path(prompt), class: "btn btn-sm btn-info" %>
+                  <%= link_to "Edit", edit_admin_prompt_path(prompt), class: "btn btn-sm btn-primary" %>
+                  <%= link_to "Delete", admin_prompt_path(prompt), method: :delete, 
+                      data: { confirm: "Are you sure?" }, class: "btn btn-sm btn-danger" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  <% else %>
+    <p>No prompts found. <%= link_to "Create your first prompt", new_admin_prompt_path %>.</p>
+  <% end %>
+</div>
+

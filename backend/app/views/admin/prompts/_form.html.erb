@@ -1,0 +1,134 @@
+<%= form_with model: [:admin, @prompt], local: true do |form| %>
+  <% if @prompt.errors.any? %>
+    <div class="error-messages">
+      <h2><%= pluralize(@prompt.errors.count, "error") %> prohibited this prompt from being saved:</h2>
+      <ul>
+        <% @prompt.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <%= form.label :category %>
+    <%= form.select :category, 
+        options_for_select([
+          ['System Instructions', 'system_instructions'],
+          ['Image Processing', 'image_processing'],
+          ['Research', 'research'],
+          ['Chat', 'chat'],
+          ['Game Modes', 'game_modes'],
+          ['Tool Functions', 'tool_functions']
+        ], @prompt.category),
+        {}, { class: "form-control", required: true } %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :name %>
+    <%= form.text_field :name, class: "form-control", required: true,
+        placeholder: "e.g., reed_persona, remove_background, price_research" %>
+    <small class="form-text text-muted">Unique identifier for this prompt within its category</small>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :model %>
+    <%= form.text_field :model, class: "form-control", required: true,
+        placeholder: "e.g., gemini-2.5-flash, gemini-flash-lite-latest" %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :prompt_type %>
+    <%= form.select :prompt_type, 
+        options_for_select([
+          ['System Instruction', 'system_instruction'],
+          ['Prompt Template', 'prompt_template'],
+          ['Tool Function', 'tool_function']
+        ], @prompt.prompt_type),
+        { include_blank: 'None' }, { class: "form-control" } %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :description %>
+    <%= form.text_area :description, class: "form-control", rows: 3,
+        placeholder: "Brief description of what this prompt does" %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :use_case %>
+    <%= form.text_area :use_case, class: "form-control", rows: 2,
+        placeholder: "What this prompt is used for" %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :prompt_text, "Prompt Text" %>
+    <%= form.text_area :prompt_text, class: "form-control", rows: 10, required: true,
+        placeholder: "Enter the actual prompt text here..." %>
+    <small class="form-text text-muted">The actual prompt text that will be sent to the AI model</small>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :sort_order %>
+    <%= form.number_field :sort_order, class: "form-control", value: @prompt.sort_order || 0 %>
+    <small class="form-text text-muted">Order in which prompts appear in lists (lower numbers first)</small>
+  </div>
+
+  <div class="form-check">
+    <%= form.check_box :active, class: "form-check-input" %>
+    <%= form.label :active, "Active", class: "form-check-label" %>
+    <small class="form-text text-muted">Only active prompts are available for use</small>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :metadata, "Metadata (JSON)" %>
+    <%= form.text_area :metadata, 
+        value: @prompt.metadata_hash.to_json,
+        class: "form-control", 
+        rows: 6,
+        placeholder: '{"expected_output": {...}, "tools": [...]}' %>
+    <small class="form-text text-muted">Additional metadata as JSON (optional)</small>
+  </div>
+
+  <div class="form-actions">
+    <%= form.submit @prompt.new_record? ? "Create Prompt" : "Update Prompt", class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_prompts_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>
+
+<style>
+.prompt-form {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-check {
+  margin-bottom: 20px;
+}
+
+.form-actions {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+}
+
+.error-messages {
+  background: #fee;
+  border: 1px solid #fcc;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+</style>
+

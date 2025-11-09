@@ -1,0 +1,127 @@
+<% content_for :title, "Prompt: #{@prompt.name}" %>
+
+<div class="prompt-show">
+  <div class="header">
+    <h1><%= @prompt.name %></h1>
+    <div class="actions">
+      <%= link_to "Edit", edit_admin_prompt_path(@prompt), class: "btn btn-primary" %>
+      <%= link_to "Back to List", admin_prompts_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <div class="prompt-details">
+    <div class="info-section">
+      <h2>Details</h2>
+      <dl>
+        <dt>Category:</dt>
+        <dd><%= @prompt.category %></dd>
+        
+        <dt>Model:</dt>
+        <dd><code><%= @prompt.model %></code></dd>
+        
+        <dt>Type:</dt>
+        <dd><%= @prompt.prompt_type || '-' %></dd>
+        
+        <dt>Active:</dt>
+        <dd>
+          <% if @prompt.active? %>
+            <span class="badge badge-success">Yes</span>
+          <% else %>
+            <span class="badge badge-secondary">No</span>
+          <% end %>
+        </dd>
+        
+        <dt>Version:</dt>
+        <dd><%= @prompt.version %></dd>
+        
+        <dt>Sort Order:</dt>
+        <dd><%= @prompt.sort_order %></dd>
+      </dl>
+    </div>
+
+    <% if @prompt.description.present? %>
+      <div class="description-section">
+        <h2>Description</h2>
+        <p><%= @prompt.description %></p>
+      </div>
+    <% end %>
+
+    <% if @prompt.use_case.present? %>
+      <div class="use-case-section">
+        <h2>Use Case</h2>
+        <p><%= @prompt.use_case %></p>
+      </div>
+    <% end %>
+
+    <div class="prompt-text-section">
+      <h2>Prompt Text</h2>
+      <pre class="prompt-text"><%= @prompt.prompt_text %></pre>
+    </div>
+
+    <% if @prompt.metadata_hash.present? %>
+      <div class="metadata-section">
+        <h2>Metadata</h2>
+        <pre class="metadata"><%= JSON.pretty_generate(@prompt.metadata_hash) %></pre>
+      </div>
+    <% end %>
+
+    <div class="timestamps">
+      <p><small>Created: <%= @prompt.created_at %></small></p>
+      <p><small>Updated: <%= @prompt.updated_at %></small></p>
+    </div>
+  </div>
+</div>
+
+<style>
+.prompt-show {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.info-section, .description-section, .use-case-section, .prompt-text-section, .metadata-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 5px;
+}
+
+.info-section dl {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 10px;
+}
+
+.info-section dt {
+  font-weight: bold;
+}
+
+.prompt-text, .metadata {
+  background: #fff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.timestamps {
+  margin-top: 20px;
+  color: #666;
+}
+</style>
+

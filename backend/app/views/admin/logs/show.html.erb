@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Log Details - Admin</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 20px auto; padding: 20px; background: #f5f5f5; }
+    .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .field { margin-bottom: 20px; }
+    .label { font-weight: 600; color: #666; margin-bottom: 5px; display: block; }
+    .value { font-size: 16px; color: #333; }
+    .btn { padding: 10px 20px; margin: 5px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; display: inline-block; }
+    .btn:hover { background: #1976D2; }
+    .success { color: #4caf50; font-weight: 600; }
+    .failure { color: #f44336; font-weight: 600; }
+    .sources { margin-top: 20px; }
+    .source-item { padding: 10px; background: #f8f9fa; border-radius: 4px; margin-bottom: 10px; }
+    pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Research Log Details</h1>
+    
+    <div class="field">
+      <span class="label">Bootie:</span>
+      <span class="value"><%= @bootie.title %></span>
+    </div>
+    
+    <div class="field">
+      <span class="label">Research Method:</span>
+      <span class="value"><%= @log.research_method || 'N/A' %></span>
+    </div>
+    
+    <div class="field">
+      <span class="label">Success:</span>
+      <span class="value <%= @log.success? ? 'success' : 'failure' %>"><%= @log.success? ? '✓ Yes' : '✗ No' %></span>
+    </div>
+    
+    <% if @log.error_message.present? %>
+      <div class="field">
+        <span class="label">Error:</span>
+        <span class="value failure"><%= @log.error_message %></span>
+      </div>
+    <% end %>
+    
+    <% if @log.research_summary.present? %>
+      <div class="field">
+        <span class="label">Summary:</span>
+        <div class="value"><%= @log.research_summary.gsub("\n", "<br>").html_safe %></div>
+      </div>
+    <% end %>
+    
+    <% if @log.research_data.present? %>
+      <div class="field">
+        <span class="label">Research Data:</span>
+        <pre><%= @log.research_data.is_a?(Hash) ? JSON.pretty_generate(@log.research_data) : @log.research_data.to_s %></pre>
+      </div>
+    <% end %>
+    
+    <div class="field">
+      <span class="label">Created:</span>
+      <span class="value"><%= @log.created_at.strftime('%Y-%m-%d %H:%M:%S') %></span>
+    </div>
+    
+    <% if @sources.any? %>
+      <div class="sources">
+        <h3>Grounding Sources</h3>
+        <% @sources.each do |source| %>
+          <div class="source-item">
+            <strong><%= source.title || 'Untitled' %></strong><br>
+            <a href="<%= source.url %>" target="_blank"><%= source.url %></a>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    
+    <div style="margin-top: 30px;">
+      <a href="<%= admin_logs_path %>" class="btn">Back to Logs</a>
+      <a href="<%= admin_root_path %>" class="btn">Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>
+

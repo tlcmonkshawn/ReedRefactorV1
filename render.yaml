@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: bootiehunter-backend-server
+    env: ruby
+    rootDir: backend
+    buildCommand: bundle install
+    startCommand: bash bin/render-start.sh
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        value: C91C5CFB0BD268D7D173737793D6939237693A00A969F50555A39F43CEE7795E55D1A74C50F8A12BBA5241CCAE5F8D74DF196EE4403A5C069104ABD41269A21B
+      - key: JWT_SECRET_KEY
+        value: 311857B8B155EFCA21B9F0C321847B06A2F4D0F390E59C7E44E063DD4B918B1A
+      - key: GOOGLE_CLOUD_PROJECT_ID
+        value: bootiehunter-v1-ovunz1
+      - key: GOOGLE_CLOUD_STORAGE_BUCKET
+        value: bootiehunter-v1-images
+      - key: GEMINI_API_KEY
+        value: AIzaSyCYWe8YnuhdM5tQ_VcGQWLNh-gtUHHwHjA
+      - key: ADMIN_PASSWORD
+        value: iamagoodgirl
+      - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
+        value: '{"type":"service_account","project_id":"bootiehunter-v1-ovunz1","private_key_id":"5d249a0f4da96bedc25a14adc46f856df08ec3e4","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQDEC9oUjP4oDRm0\nRxlbAP03KuqN0snUsH/wmRalTNZJqAzfIUgvShQupa9SINM0UYuJSlEWMMOjAxSD\nowlhcY8XxqEnThW7ddLKGskmI2GDlK+uE/FtWwfrfkC+NaajNa0DJKHvIUaI+KS7\n/M7cVAvhSsHXTZUDns9Wys3UgUgxhjA+usdN5hc2C2X7i02HyxtEdeUmbPdbOUo4\n5zLTb3nJdDi+zcYuYDQpW/MPUJm6JTsw0KgEqXelemS8ZAwz3lVPORBl0KydUFs9\nfpLwgpMFoISjJ0SciYLnlY+o95QDOZB58WiEzU+h40LP2Z+hShrZGbdZYUuzIRhJ\n91oTnjjHAgMBAAECgf9Cz9xNaLrCLLemojSLh69wxAevEGE+pXYI01JoPrPGBZFQ\n9HV7nMmmxc6JdEd0GJlx7tAeDB+P+A/vLKVS9F4iwIO3XKsr+BjQZRzCj68Dr4Gp\nhKLmtYR3tBnRZalAupTIZPz5BsrucggQOtOI31z7QfGIvrWXgAjhakEUoHCOO9KQ\nEI/kICJLNc9rNAnAXJ/rpR4FDuuNcpm+mvZ4gqcmqN1iax+1l7eMJtwkbylJs4eQ\nlvgMXKZWh1Y/qffmAyfGP4XVCBeeQm2tqwrdIPuwhmhfP6QM2nSV08LX0CECU7Mv\nWTKpz0HXYFTW+1BhV2x2pF9vjBycVuJOLBSyuMUCgYEA9S/nxyEZV51xMr9IPh3X\nPFgss00tXZ90tvBA09tHmhIKzU/Krjn+OO1RJjbFt3GudjyaTztA9N4/IhgtuyZ8\nrUBwel8mFqJX/ko9XNDnJE8UK789DG/EgS95Vz+uIGiSPAyGC7ia8DA+R7G/76Rc\nMNJ3Sb6POQObWehAgQG6xxMCgYEAzLEo/dqcugkpBmdRihULBBpC6GCC5Yi6vELM\nVL7aDMoxmFF1mTmvnsBlstgH86S5ikB6JdWnD2duvrQtgN9IBjeO7LVIIB8BoioX\nHwioeGUYix5YPmAgCkBjhDEEMyCgeAKZqkuu1t8YUn6nqb0lFh9/gVmqi+ZwQ2kd\no5LC+f0CgYBGBD8g+0+8WGaKAlvD+UuMnPVu4nww/ycaUrOAjF7/HWXeSYnshP0X\nDpYc3olJoHoco6PBOn+LLahDuTnd9tiltQApweAjmIqeQF8TkUhgcwCkmYD6ezRX\nW9I/2xyDfrk70qu4zyfXrT8rxBO2gG4fNwr/kR5fPqtvWkaJUJAg5wKBgGLReF+t\nZZJuj662vGe0JwBRCVIUHb1gV/5BJVIYXT5lcrH9SY+yiLVUXwSLRLN8J9K1tAKF\n9cP7BDzu0TTxFl1h/w8JqYtQTMKUHVtvG54b+FBZUvKyB2XLlf+ghk2Eh9PINZVA\nOmUjiSNyX9ETLk9S34R73Fjz4+i3W4a3eIelAoGBAKEPRh8y5BRizcnJB1t88BBz\nMZ6KjdG36P/Ia4XbrRu4PHMgwVm82LT5GxvEd1FK4oWn12cC4aKGgBEWLVC/zY+i\nHT2ithn1XRazvQkUgPHQvuJnqDAxyDpo+w057FUvMWGay2Hj+8mqfLgzkVyqhgDk\nF6QzUzxjZorwYESlIoHq\n-----END PRIVATE KEY-----\n","client_email":"bootiehunter-storage@bootiehunter-v1-ovunz1.iam.gserviceaccount.com","client_id":"114312923562589068223","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/bootiehunter-storage%40bootiehunter-v1-ovunz1.iam.gserviceaccount.com","universe_domain":"googleapis.com"}'
+      # DATABASE_URL will be auto-injected by Render when the database is linked to this service
+      # To link the database: Go to Render Dashboard -> Service Settings -> Linked Databases -> Link 'bootiehunter-db'

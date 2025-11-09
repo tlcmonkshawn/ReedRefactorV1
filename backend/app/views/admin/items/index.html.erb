@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Items (Booties) - Admin</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1400px; margin: 20px auto; padding: 20px; background: #f5f5f5; }
+    .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .filters { margin-bottom: 20px; }
+    .filters a { padding: 8px 16px; margin: 4px; background: #e0e0e0; color: #333; text-decoration: none; border-radius: 4px; display: inline-block; }
+    .filters a.active { background: #2196F3; color: white; }
+    table { width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; font-weight: 600; }
+    .btn { padding: 8px 16px; margin: 4px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; display: inline-block; }
+    .btn:hover { background: #1976D2; }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .status-captured { background: #e3f2fd; color: #1976d2; }
+    .status-submitted { background: #fff3e0; color: #f57c00; }
+    .status-researching { background: #f3e5f5; color: #7b1fa2; }
+    .status-researched { background: #e8f5e9; color: #388e3c; }
+    .status-finalized { background: #e0f2f1; color: #00796b; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Manage Items (Booties)</h1>
+    <a href="/admin" class="btn">Back to Dashboard</a>
+  </div>
+
+  <div class="filters">
+    <a href="/admin/items" class="<%= 'active' unless @status_filter.present? %>">All</a>
+    <a href="/admin/items?status=captured" class="<%= 'active' if @status_filter == 'captured' %>">Captured</a>
+    <a href="/admin/items?status=submitted" class="<%= 'active' if @status_filter == 'submitted' %>">Submitted</a>
+    <a href="/admin/items?status=researching" class="<%= 'active' if @status_filter == 'researching' %>">Researching</a>
+    <a href="/admin/items?status=researched" class="<%= 'active' if @status_filter == 'researched' %>">Researched</a>
+    <a href="/admin/items?status=finalized" class="<%= 'active' if @status_filter == 'finalized' %>">Finalized</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>User</th>
+        <th>Location</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @booties.each do |bootie| %>
+        <tr>
+          <td><%= bootie.title %></td>
+          <td><%= bootie.category %></td>
+          <td><span class="status-badge status-<%= bootie.status %>"><%= bootie.status %></span></td>
+          <td><%= bootie.user.email %></td>
+          <td><%= bootie.location.name %></td>
+          <td><%= bootie.created_at.strftime('%Y-%m-%d') %></td>
+          <td>
+            <a href="<%= admin_item_path(bootie) %>" class="btn">View</a>
+            <a href="<%= edit_admin_item_path(bootie) %>" class="btn">Edit</a>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%= paginate @booties if defined?(Kaminari) %>
+</body>
+</html>
+

@@ -1,0 +1,43 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+development:
+  <<: *default
+  database: bootiehunter_development
+  username: <%= ENV.fetch("DB_USERNAME") { "postgres" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "" } %>
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("DB_PORT") { "5432" } %>
+
+test:
+  <<: *default
+  database: bootiehunter_test
+  username: <%= ENV.fetch("DB_USERNAME") { "postgres" } %>
+  password: <%= ENV.fetch("DB_PASSWORD") { "" } %>
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  port: <%= ENV.fetch("DB_PORT") { "5432" } %>
+
+production:
+  <<: *default
+  <% if ENV["DATABASE_URL"].present? %>
+  # Use DATABASE_URL if provided (preferred for Render.com)
+  # Render PostgreSQL REQUIRES SSL - sslmode must be in DATABASE_URL itself
+  # When using 'url:', Rails ignores other SSL parameters, so they must be in the URL
+  url: <%= ENV["DATABASE_URL"] %>
+  <% elsif ENV["DATABASE_HOST"].present? %>
+  # Fallback: use individual connection parameters if DATABASE_URL not set
+  host: <%= ENV["DATABASE_HOST"] %>
+  port: <%= ENV.fetch("DATABASE_PORT") { "5432" } %>
+  database: <%= ENV.fetch("DATABASE_NAME") { "bootiehunter_production" } %>
+  username: <%= ENV.fetch("DATABASE_USERNAME") { "bootiehunter_db_user" } %>
+  password: <%= ENV["DATABASE_PASSWORD"] %>
+  sslmode: require
+  <% else %>
+  # Final fallback (should not happen in production)
+  database: bootiehunter_production
+  <% end %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 10 } %>
+

@@ -1,0 +1,12 @@
+<% content_for :title, "Edit Prompt: #{@prompt.name}" %>
+
+<div class="prompt-form">
+  <div class="header">
+    <h1>Edit Prompt: <%= @prompt.name %></h1>
+    <%= link_to "Back to List", admin_prompts_path, class: "btn btn-secondary" %>
+    <%= link_to "View", admin_prompt_path(@prompt), class: "btn btn-info" %>
+  </div>
+
+  <%= render 'form', prompt: @prompt %>
+</div>
+

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Locations - Admin</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 20px auto; padding: 20px; background: #f5f5f5; }
+    .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    table { width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; font-weight: 600; }
+    .btn { padding: 8px 16px; margin: 4px; background: #2196F3; color: white; text-decoration: none; border-radius: 4px; display: inline-block; }
+    .btn:hover { background: #1976D2; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Manage Locations</h1>
+    <a href="/admin/locations/new" class="btn">New Location</a>
+    <a href="/admin" class="btn">Back to Dashboard</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Address</th>
+        <th>City</th>
+        <th>State</th>
+        <th>Active</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @locations.each do |location| %>
+        <tr>
+          <td><%= location.name %></td>
+          <td><%= location.address %></td>
+          <td><%= location.city %></td>
+          <td><%= location.state %></td>
+          <td><%= location.active? ? '✓' : '✗' %></td>
+          <td>
+            <a href="<%= admin_location_path(location) %>" class="btn">View</a>
+            <a href="<%= edit_admin_location_path(location) %>" class="btn">Edit</a>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%= paginate @locations if defined?(Kaminari) %>
+</body>
+</html>
+
