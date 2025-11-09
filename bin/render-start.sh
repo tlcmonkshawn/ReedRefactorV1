@@ -24,26 +24,13 @@ if [ -z "$DATABASE_URL" ]; then
 else
   echo "✅ DATABASE_URL is set (length: ${#DATABASE_URL} chars)"
   echo "   First 30 chars: ${DATABASE_URL:0:30}..."
-  
-  # Ensure SSL mode is set for Render PostgreSQL
-  # Database REQUIRES SSL - only set sslmode=require (no certificate parameters needed)
-  if [[ "$DATABASE_URL" != *"sslmode"* ]]; then
-    separator="?"
-    if [[ "$DATABASE_URL" == *"?"* ]]; then
-      separator="&"
-    fi
-    # Add sslmode=require - Render PostgreSQL requires SSL
-    export DATABASE_URL="${DATABASE_URL}${separator}sslmode=require"
-    echo "   Added sslmode=require to DATABASE_URL (database requires SSL)"
+  # Show if SSL is already configured
+  if [[ "$DATABASE_URL" == *"sslmode"* ]]; then
+    echo "   SSL mode already in DATABASE_URL"
   else
-    # Ensure sslmode is set to 'require' (database requires SSL)
-    export DATABASE_URL="${DATABASE_URL//sslmode=prefer/sslmode=require}"
-    export DATABASE_URL="${DATABASE_URL//sslmode=prefer&/sslmode=require&}"
-    export DATABASE_URL="${DATABASE_URL//&sslmode=prefer/&sslmode=require}"
-    echo "   Ensured sslmode=require in DATABASE_URL"
+    echo "   No SSL mode in DATABASE_URL - Render should handle this automatically"
   fi
-  
-  # Export DATABASE_URL so it's available to all child processes
+  # Don't modify DATABASE_URL - let Render and Rails handle SSL configuration
   export DATABASE_URL
 fi
 
