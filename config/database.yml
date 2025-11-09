@@ -24,24 +24,9 @@ production:
   <<: *default
   <% if ENV["DATABASE_URL"].present? %>
   # Use DATABASE_URL if provided (preferred for Render.com)
-  # Render PostgreSQL requires SSL with certificate verification
-  # Parse DATABASE_URL and add sslrootcert if not present
-  <% 
-    db_url = ENV["DATABASE_URL"]
-    # Add sslrootcert to DATABASE_URL if not already present
-    # Use system certificate bundle (available on Render's Ubuntu images)
-    if db_url.include?('sslmode=')
-      # Replace sslmode=require with sslmode=verify-ca and add sslrootcert
-      db_url = db_url.gsub(/sslmode=require/, 'sslmode=verify-ca')
-      separator = db_url.include?('?') ? '&' : '?'
-      db_url = "#{db_url}#{separator}sslrootcert=system" unless db_url.include?('sslrootcert')
-    else
-      # Add both sslmode and sslrootcert
-      separator = db_url.include?('?') ? '&' : '?'
-      db_url = "#{db_url}#{separator}sslmode=verify-ca&sslrootcert=system"
-    end
-  %>
-  url: <%= db_url %>
+  # Render PostgreSQL REQUIRES SSL - sslmode must be in DATABASE_URL itself
+  # When using 'url:', Rails ignores other SSL parameters, so they must be in the URL
+  url: <%= ENV["DATABASE_URL"] %>
   <% elsif ENV["DATABASE_HOST"].present? %>
   # Fallback: use individual connection parameters if DATABASE_URL not set
   host: <%= ENV["DATABASE_HOST"] %>
@@ -49,8 +34,7 @@ production:
   database: <%= ENV.fetch("DATABASE_NAME") { "bootiehunter_production" } %>
   username: <%= ENV.fetch("DATABASE_USERNAME") { "bootiehunter_db_user" } %>
   password: <%= ENV["DATABASE_PASSWORD"] %>
-  sslmode: verify-ca
-  sslrootcert: system
+  sslmode: require
   <% else %>
   # Final fallback (should not happen in production)
   database: bootiehunter_production

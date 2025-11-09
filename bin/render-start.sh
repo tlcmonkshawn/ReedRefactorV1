@@ -26,18 +26,22 @@ else
   echo "   First 30 chars: ${DATABASE_URL:0:30}..."
   
   # Ensure SSL mode is set for Render PostgreSQL
-  # Use verify-ca with system's trusted certificate roots
-  # This uses the system's CA bundle instead of a custom file
-  # Remove any existing sslmode and sslrootcert parameters
-  export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's/[?&]sslmode=[^&]*//g' | sed 's/[?&]sslrootcert=[^&]*//g')
-  
-  # Add sslmode=verify-ca with system certificate bundle
-  separator="?"
-  if [[ "$DATABASE_URL" == *"?"* ]]; then
-    separator="&"
+  # Database REQUIRES SSL - only set sslmode=require (no certificate parameters needed)
+  if [[ "$DATABASE_URL" != *"sslmode"* ]]; then
+    separator="?"
+    if [[ "$DATABASE_URL" == *"?"* ]]; then
+      separator="&"
+    fi
+    # Add sslmode=require - Render PostgreSQL requires SSL
+    export DATABASE_URL="${DATABASE_URL}${separator}sslmode=require"
+    echo "   Added sslmode=require to DATABASE_URL (database requires SSL)"
+  else
+    # Ensure sslmode is set to 'require' (database requires SSL)
+    export DATABASE_URL="${DATABASE_URL//sslmode=prefer/sslmode=require}"
+    export DATABASE_URL="${DATABASE_URL//sslmode=prefer&/sslmode=require&}"
+    export DATABASE_URL="${DATABASE_URL//&sslmode=prefer/&sslmode=require}"
+    echo "   Ensured sslmode=require in DATABASE_URL"
   fi
-  export DATABASE_URL="${DATABASE_URL}${separator}sslmode=verify-ca&sslrootcert=system"
-  echo "   Set sslmode=verify-ca with system certificate bundle"
   
   # Export DATABASE_URL so it's available to all child processes
   export DATABASE_URL
