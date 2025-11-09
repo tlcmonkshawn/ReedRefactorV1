@@ -29,17 +29,16 @@ production:
   <% 
     db_url = ENV["DATABASE_URL"]
     # Add sslrootcert to DATABASE_URL if not already present
-    # This points to the Let's Encrypt CA certificate bundle
-    cert_path = Rails.root.join('config', 'ca-certificates.crt').to_s
+    # Use system certificate bundle (available on Render's Ubuntu images)
     if db_url.include?('sslmode=')
       # Replace sslmode=require with sslmode=verify-ca and add sslrootcert
       db_url = db_url.gsub(/sslmode=require/, 'sslmode=verify-ca')
       separator = db_url.include?('?') ? '&' : '?'
-      db_url = "#{db_url}#{separator}sslrootcert=#{cert_path}" unless db_url.include?('sslrootcert')
+      db_url = "#{db_url}#{separator}sslrootcert=system" unless db_url.include?('sslrootcert')
     else
       # Add both sslmode and sslrootcert
       separator = db_url.include?('?') ? '&' : '?'
-      db_url = "#{db_url}#{separator}sslmode=verify-ca&sslrootcert=#{cert_path}"
+      db_url = "#{db_url}#{separator}sslmode=verify-ca&sslrootcert=system"
     end
   %>
   url: <%= db_url %>
@@ -51,7 +50,7 @@ production:
   username: <%= ENV.fetch("DATABASE_USERNAME") { "bootiehunter_db_user" } %>
   password: <%= ENV["DATABASE_PASSWORD"] %>
   sslmode: verify-ca
-  sslrootcert: <%= Rails.root.join('config', 'ca-certificates.crt') %>
+  sslrootcert: system
   <% else %>
   # Final fallback (should not happen in production)
   database: bootiehunter_production

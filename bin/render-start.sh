@@ -26,20 +26,18 @@ else
   echo "   First 30 chars: ${DATABASE_URL:0:30}..."
   
   # Ensure SSL mode is set for Render PostgreSQL
-  # Use verify-ca with certificate bundle for proper SSL verification
-  # The certificate bundle is in config/ca-certificates.crt
-  CERT_PATH="/opt/render/project/config/ca-certificates.crt"
-  
+  # Use verify-ca with system's trusted certificate roots
+  # This uses the system's CA bundle instead of a custom file
   # Remove any existing sslmode and sslrootcert parameters
   export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's/[?&]sslmode=[^&]*//g' | sed 's/[?&]sslrootcert=[^&]*//g')
   
-  # Add sslmode=verify-ca and sslrootcert
+  # Add sslmode=verify-ca with system certificate bundle
   separator="?"
   if [[ "$DATABASE_URL" == *"?"* ]]; then
     separator="&"
   fi
-  export DATABASE_URL="${DATABASE_URL}${separator}sslmode=verify-ca&sslrootcert=${CERT_PATH}"
-  echo "   Set sslmode=verify-ca with certificate bundle at ${CERT_PATH}"
+  export DATABASE_URL="${DATABASE_URL}${separator}sslmode=verify-ca&sslrootcert=system"
+  echo "   Set sslmode=verify-ca with system certificate bundle"
   
   # Export DATABASE_URL so it's available to all child processes
   export DATABASE_URL
