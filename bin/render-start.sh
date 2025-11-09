@@ -86,10 +86,15 @@ echo "✅ In Rails root directory: $(pwd)"
 echo ""
 echo "Running database migrations..."
 echo "Using DATABASE_URL: ${DATABASE_URL:0:30}..."
+echo "Full DATABASE_URL (masked): $(echo $DATABASE_URL | sed 's/:[^:@]*@/:****@/')"
 set +e  # Temporarily disable exit on error to capture exit code
 
-# Run migrations directly using rake
-RAILS_ENV=production DATABASE_URL="$DATABASE_URL" timeout 120 bundle exec rake db:migrate 2>&1
+# Ensure DATABASE_URL is exported and available
+export DATABASE_URL
+
+# Run migrations directly using rake - explicitly pass DATABASE_URL in the environment
+# This ensures the modified DATABASE_URL with SSL is used
+env DATABASE_URL="$DATABASE_URL" RAILS_ENV=production timeout 120 bundle exec rake db:migrate 2>&1
 MIGRATE_EXIT=$?
 
 set -e  # Re-enable exit on error
