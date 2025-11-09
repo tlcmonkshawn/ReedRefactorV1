@@ -26,20 +26,20 @@ else
   echo "   First 30 chars: ${DATABASE_URL:0:30}..."
   
   # Ensure SSL mode is set for Render PostgreSQL
-  # Try sslmode=prefer first (allows SSL but doesn't require strict certificate verification)
-  # If that doesn't work, we can try require or disable verification
-  if [[ "$DATABASE_URL" != *"sslmode"* ]]; then
-    separator="?"
-    if [[ "$DATABASE_URL" == *"?"* ]]; then
-      separator="&"
-    fi
-    # Try prefer first - allows SSL but more lenient with certificates
-    export DATABASE_URL="${DATABASE_URL}${separator}sslmode=prefer"
-    echo "   Added sslmode=prefer to DATABASE_URL (allows SSL, lenient certificate verification)"
-  else
-    # If already set, keep it as-is
-    echo "   SSL mode already configured in DATABASE_URL"
+  # The issue is likely certificate verification - try different SSL modes
+  # Remove any existing sslmode and try allow (most lenient - tries SSL, falls back if needed)
+  if [[ "$DATABASE_URL" == *"sslmode"* ]]; then
+    # Remove existing sslmode parameter
+    export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's/[?&]sslmode=[^&]*//' | sed 's/sslmode=[^&]*[&]/\&/' | sed 's/sslmode=[^&]*$//')
   fi
+  
+  # Add sslmode=allow (tries SSL, falls back to non-SSL if certificate issues)
+  separator="?"
+  if [[ "$DATABASE_URL" == *"?"* ]]; then
+    separator="&"
+  fi
+  export DATABASE_URL="${DATABASE_URL}${separator}sslmode=allow"
+  echo "   Set sslmode=allow (tries SSL, falls back if certificate issues)"
   
   # Export DATABASE_URL so it's available to all child processes
   export DATABASE_URL
