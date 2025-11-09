@@ -24,15 +24,10 @@ production:
   <<: *default
   <% if ENV["DATABASE_URL"].present? %>
   # Use DATABASE_URL if provided (preferred for Render.com)
-  # Render PostgreSQL REQUIRES SSL - automatically add sslmode=require if missing
-  <% 
-    db_url = ENV["DATABASE_URL"]
-    # Add sslmode=require if not already present (Render PostgreSQL requires SSL)
-    unless db_url.include?('sslmode=') || db_url.include?('ssl=true')
-      db_url += (db_url.include?('?') ? '&' : '?') + 'sslmode=require'
-    end
-  %>
-  url: <%= db_url %>
+  # Render PostgreSQL REQUIRES SSL - sslmode must be in DATABASE_URL itself
+  # The render-start.sh script automatically adds ?sslmode=require if missing
+  # When using 'url:', Rails ignores other SSL parameters, so they must be in the URL
+  url: <%= ENV["DATABASE_URL"] %>
   <% elsif ENV["DATABASE_HOST"].present? %>
   # Fallback: use individual connection parameters if DATABASE_URL not set
   host: <%= ENV["DATABASE_HOST"] %>

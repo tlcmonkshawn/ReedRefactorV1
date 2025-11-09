@@ -3,7 +3,7 @@ services:
     name: reed-refactor-v1-backend
     env: ruby
     buildCommand: bundle install --deployment --without development test
-    startCommand: bundle exec puma -C config/puma.rb
+    startCommand: bash bin/render-start.sh
     plan: starter
     region: oregon
     healthCheckPath: /health
