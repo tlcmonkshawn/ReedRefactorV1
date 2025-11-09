@@ -25,22 +25,20 @@ else
   echo "✅ DATABASE_URL is set (length: ${#DATABASE_URL} chars)"
   echo "   First 30 chars: ${DATABASE_URL:0:30}..."
   
-  # Ensure SSL mode is set for Render PostgreSQL (matches Bootie Hunter V1)
-  # Database REQUIRES SSL - only set sslmode=require (no certificate parameters needed)
+  # Ensure SSL mode is set for Render PostgreSQL
+  # Try sslmode=prefer first (allows SSL but doesn't require strict certificate verification)
+  # If that doesn't work, we can try require or disable verification
   if [[ "$DATABASE_URL" != *"sslmode"* ]]; then
     separator="?"
     if [[ "$DATABASE_URL" == *"?"* ]]; then
       separator="&"
     fi
-    # Add sslmode=require - Render PostgreSQL requires SSL
-    export DATABASE_URL="${DATABASE_URL}${separator}sslmode=require"
-    echo "   Added sslmode=require to DATABASE_URL (database requires SSL)"
+    # Try prefer first - allows SSL but more lenient with certificates
+    export DATABASE_URL="${DATABASE_URL}${separator}sslmode=prefer"
+    echo "   Added sslmode=prefer to DATABASE_URL (allows SSL, lenient certificate verification)"
   else
-    # Ensure sslmode is set to 'require' (database requires SSL)
-    export DATABASE_URL="${DATABASE_URL//sslmode=prefer/sslmode=require}"
-    export DATABASE_URL="${DATABASE_URL//sslmode=prefer&/sslmode=require&}"
-    export DATABASE_URL="${DATABASE_URL//&sslmode=prefer/&sslmode=require}"
-    echo "   Ensured sslmode=require in DATABASE_URL"
+    # If already set, keep it as-is
+    echo "   SSL mode already configured in DATABASE_URL"
   fi
   
   # Export DATABASE_URL so it's available to all child processes
