@@ -24,16 +24,8 @@ production:
   <<: *default
   <% if ENV["DATABASE_URL"].present? %>
   # Use DATABASE_URL if provided (preferred for Render.com)
-  # Parse DATABASE_URL and add SSL configuration
-  <% 
-    db_url = ENV["DATABASE_URL"]
-    # If DATABASE_URL doesn't have sslmode, add it
-    unless db_url.include?('sslmode')
-      separator = db_url.include?('?') ? '&' : '?'
-      db_url = "#{db_url}#{separator}sslmode=require"
-    end
-  %>
-  url: <%= db_url %>
+  # Render PostgreSQL requires SSL - use the URL as-is (Render should configure it)
+  url: <%= ENV["DATABASE_URL"] %>
   <% elsif ENV["DATABASE_HOST"].present? %>
   # Fallback: use individual connection parameters if DATABASE_URL not set
   host: <%= ENV["DATABASE_HOST"] %>
