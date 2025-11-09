@@ -18,7 +18,7 @@ class PromptCacheService
   def self.load!
     @@mutex.synchronize do
       @@cache.clear
-      prompts = Prompt.active.includes([]).to_a
+      prompts = Prompt.active
       
       prompts.each do |prompt|
         key = "#{prompt.category}:#{prompt.name}"
@@ -26,7 +26,7 @@ class PromptCacheService
       end
       
       # Track the most recent update time
-      @@last_updated_at = Prompt.maximum(:updated_at) || Time.current
+      @@last_updated_at = prompts.map(&:updated_at).compact.max || Time.current
       
       Rails.logger.info "PromptCacheService: Loaded #{prompts.count} prompts into cache"
     end
@@ -56,7 +56,8 @@ class PromptCacheService
   # Check if prompts have been updated since last cache load
   # Returns true if updates are needed, false otherwise
   def self.check_for_updates
-    current_max_updated_at = Prompt.maximum(:updated_at)
+    prompts = Prompt.active
+    current_max_updated_at = prompts.map(&:updated_at).compact.max
     
     if current_max_updated_at.nil?
       return false

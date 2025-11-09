@@ -53,6 +53,8 @@ secrets/
 *.key
 *.pem
 service_account_key.json
+service-account-key.json
+.secret_key_base
 
 # Temporary files
 *.tmp

@@ -12,8 +12,7 @@ Rails.application.configure do
   config.active_support.deprecation = :log
   config.active_support.disallowed_deprecation = :raise
   config.active_support.disallowed_deprecation_warnings = []
-  config.active_record.migration_error = :page_load
-  config.active_record.verbose_query_logs = true
+  # ActiveRecord removed - using Firestore instead
   # config.assets.quiet = true  # Assets removed in Rails 8.1
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 end

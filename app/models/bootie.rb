@@ -6,30 +6,64 @@
 # A Bootie is "finalized" when it's published to the Square catalog for sale.
 #
 # @see PRODUCT_PROFILE.md for detailed feature descriptions
-class Bootie < ApplicationRecord
-  # Associations
-  belongs_to :user                  # User who captured the Bootie
-  belongs_to :location              # Physical store location
-  has_many :research_logs, dependent: :destroy           # Research history and process logs
-  has_many :grounding_sources, dependent: :destroy       # Research source citations (URLs, titles)
-  has_many :scores, dependent: :nullify                  # Gamification scores (nullify to preserve score history)
+class Bootie < FirestoreModel
+  # Define attributes
+  attribute :title, :string
+  attribute :description, :string
+  attribute :category, :string
+  attribute :status, :string, default: 'captured'
+  attribute :user_id, :string
+  attribute :location_id, :string
+  attribute :primary_image_url, :string
+  attribute :alternate_image_urls, default: []
+  attribute :edited_image_urls, default: []
+  attribute :recommended_bounty, :decimal
+  attribute :final_bounty, :decimal
+  attribute :research_summary, :string
+  attribute :research_reasoning, :string
+  attribute :research_auto_triggered, :boolean, default: false
+  attribute :research_started_at, :datetime
+  attribute :research_completed_at, :datetime
+  attribute :square_product_id, :string
+  attribute :square_variation_id, :string
+  attribute :finalized_at, :datetime
 
   # Validations
   validates :title, presence: true
-  # Category must be one of the predefined categories
   validates :category, presence: true, inclusion: { in: %w[used_goods antiques electronics collectibles weaponry artifacts data_logs miscellaneous] }
-  # Status must follow the workflow progression
   validates :status, presence: true, inclusion: { in: %w[captured submitted researching researched finalized] }
+  validates :user_id, presence: true
+  validates :location_id, presence: true
 
-  # Scopes for querying Booties
-  scope :by_status, ->(status) { where(status: status) }
-  scope :by_category, ->(category) { where(category: category) }
-  scope :by_location, ->(location_id) { where(location_id: location_id) }
-  scope :pending_research, -> { where(status: %w[submitted researching]) }          # Booties awaiting or in research
-  scope :ready_for_finalization, -> { where(status: 'researched') }                 # Booties ready for Bootie Boss review
-  scope :finalized, -> { where(status: 'finalized') }                               # Booties published to Square
+  # Scopes
+  def self.by_status(status)
+    where(:status, status).get
+  end
 
-  # Status helper methods - convenience methods for checking current status
+  def self.by_category(category)
+    where(:category, category).get
+  end
+
+  def self.by_location(location_id)
+    where(:location_id, location_id).get
+  end
+
+  def self.pending_research
+    # Firestore doesn't support OR queries directly, so we query each status separately
+    submitted = where(:status, 'submitted').get
+    researching = where(:status, 'researching').get
+    submitted + researching
+  end
+
+  def self.ready_for_finalization
+    where(:status, 'researched').get
+  end
+
+  def self.finalized
+    where(:status, 'finalized').get
+  end
+
+  # Status helper methods
   def captured?
     status == 'captured'
   end
@@ -50,28 +84,17 @@ class Bootie < ApplicationRecord
     status == 'finalized'
   end
 
-  # Status transition methods - enforce workflow progression
-  #
-  # Submit Bootie for research (moves from captured -> submitted)
-  # Research is automatically triggered after submission
+  # Status transition methods
   def submit!
     return false unless captured?
     update(status: 'submitted', research_auto_triggered: true)
   end
 
-  # Start research process (moves from submitted -> researching)
-  # Called by ResearchService when research begins
   def start_research!
     return false unless submitted?
     update(status: 'researching', research_started_at: Time.current)
   end
 
-  # Complete research with results (moves from researching -> researched)
-  # Called by ResearchService after research completes
-  #
-  # @param recommended_bounty [Decimal] AI-recommended price
-  # @param research_summary [String] Brief summary of research findings
-  # @param research_reasoning [String] Detailed reasoning for recommended price
   def complete_research!(recommended_bounty:, research_summary:, research_reasoning:)
     return false unless researching?
     update(
@@ -83,12 +106,6 @@ class Bootie < ApplicationRecord
     )
   end
 
-  # Finalize Bootie to Square catalog (moves from researched -> finalized)
-  # Called by FinalizationService when Bootie Boss approves and publishes to Square
-  #
-  # @param final_bounty [Decimal] Final price set by Bootie Boss
-  # @param square_product_id [String] Square catalog product ID
-  # @param square_variation_id [String] Square catalog variation ID
   def finalize!(final_bounty:, square_product_id:, square_variation_id:)
     return false unless researched?
     return false if final_bounty.blank?
@@ -101,5 +118,25 @@ class Bootie < ApplicationRecord
       finalized_at: Time.current
     )
   end
-end
 
+  # Associations
+  def user
+    User.find(user_id) if user_id.present?
+  end
+
+  def location
+    Location.find(location_id) if location_id.present?
+  end
+
+  def research_logs
+    ResearchLog.where(:bootie_id, id).get
+  end
+
+  def grounding_sources
+    GroundingSource.where(:bootie_id, id).get
+  end
+
+  def scores
+    Score.where(:bootie_id, id).get
+  end
+end

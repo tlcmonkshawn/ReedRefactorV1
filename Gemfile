@@ -9,9 +9,8 @@ gem 'rails', '~> 8.1.0'
 # Web Server
 gem 'puma', '~> 6.4'
 
-# Database
-gem 'pg', '~> 1.5'
-gem 'activerecord-postgres_enum', '~> 1.7'
+# Database - Firestore
+gem 'google-cloud-firestore', '~> 2.15'
 
 # Authentication & Authorization
 gem 'bcrypt', '~> 3.1'

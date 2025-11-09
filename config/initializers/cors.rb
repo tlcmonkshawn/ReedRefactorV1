@@ -11,10 +11,13 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     # Allow all origins in production (or specify domains via CORS_ORIGINS env var)
-    # Format: "https://your-app.netlify.app,https://another-domain.com,http://localhost:8080"
-    # For production, '*' allows all origins
+    # Format: "https://reed-refactor-v1-frontend-xxx-uw.a.run.app,http://localhost:8080"
+    # For production, include Cloud Run frontend URL
     # For development, specify localhost origins explicitly
-    origins ENV.fetch('CORS_ORIGINS', '*').split(',').map(&:strip)
+    default_origins = Rails.env.production? ? 
+      ['https://reed-refactor-v1-frontend-*.run.app', '*'] : 
+      ['http://localhost:8080', 'http://localhost:3000', '*']
+    origins ENV.fetch('CORS_ORIGINS', default_origins.join(',')).split(',').map(&:strip)
 
     # Apply CORS to EVERY SINGLE ROUTE - no exceptions
     resource '*',

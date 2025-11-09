@@ -4,24 +4,13 @@ module Admin
       begin
         @stats = {
           total_users: User.count,
-          active_users: User.active.count,
+          active_users: User.active.length,
           total_booties: Bootie.count,
-          pending_booties: Bootie.pending_research.count,
-          finalized_booties: Bootie.finalized.count,
-          total_locations: Location.active.count
+          pending_booties: Bootie.pending_research.length,
+          finalized_booties: Bootie.finalized.length,
+          total_locations: Location.active.length
         }
-      rescue ActiveRecord::ConnectionNotEstablished, PG::ConnectionBad, PG::Error => e
-        Rails.logger.error "Database error in admin dashboard: #{e.message}"
-        @stats = {
-          total_users: 0,
-          active_users: 0,
-          total_booties: 0,
-          pending_booties: 0,
-          finalized_booties: 0,
-          total_locations: 0
-        }
-        @db_error = "Database connection error: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         Rails.logger.error "Error in admin dashboard: #{e.class}: #{e.message}"
         Rails.logger.error e.backtrace.join("\n")
         @stats = {
@@ -37,4 +26,3 @@ module Admin
     end
   end
 end
-

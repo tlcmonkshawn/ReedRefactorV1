@@ -13,8 +13,10 @@ module Api
         decoded = JwtService.decode(token)
         return render_unauthorized unless decoded
 
-        @current_user = User.find_by(id: decoded['user_id'])
+        @current_user = User.find(decoded['user_id'])
         return render_unauthorized unless @current_user&.active?
+      rescue FirestoreModel::DocumentNotFound
+        return render_unauthorized
       end
 
       def current_user

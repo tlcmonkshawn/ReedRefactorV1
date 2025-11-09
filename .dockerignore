@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+README.md
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# Test files
+spec/
+test/
+coverage/
+
+# Logs
+*.log
+log/*
+tmp/*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter (frontend will be built separately)
+frontend/
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+build/
+dist/
+
+# Secrets
+*.key
+*.pem
+service-account-key.json
+secrets/
+
+# Render-specific (no longer needed)
+render.yaml
+
+# Database (using Firestore)
+db/migrate/
+db/schema.rb
+
+# Temporary files
+*.tmp
+*.temp
+

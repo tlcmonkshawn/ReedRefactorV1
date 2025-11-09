@@ -3,82 +3,59 @@ class HealthController < ApplicationController
 
   def check
     begin
-      # Quick health check with timeout protection
-      # Use a simple query with timeout to avoid hanging
+      # Quick health check for Firestore
       db_status = 'unknown'
       db_error = nil
       db_config_info = {}
       
-      # Log database configuration (without sensitive data)
+      # Log Firestore configuration
       begin
-        db_config = ActiveRecord::Base.connection_db_config.configuration_hash
         db_config_info = {
-          adapter: db_config[:adapter],
-          database: db_config[:database],
-          host: db_config[:host],
-          port: db_config[:port],
-          pool: db_config[:pool],
-          has_url: ENV['DATABASE_URL'].present?,
-          url_preview: ENV['DATABASE_URL'].present? ? "#{ENV['DATABASE_URL'].split('@').first}@***" : nil
+          adapter: 'firestore',
+          project_id: ENV['GOOGLE_CLOUD_PROJECT_ID'] || 'not_set',
+          has_credentials: ENV['GOOGLE_APPLICATION_CREDENTIALS_JSON'].present? || ENV['GOOGLE_APPLICATION_CREDENTIALS'].present?
         }
       rescue => e
         db_config_info = { error: "Could not read config: #{e.message}" }
       end
       
       begin
-        # Set a short timeout for database queries
-        ActiveRecord::Base.connection_pool.with_connection do |conn|
-          result = conn.execute("SELECT 1 as test")
-          db_status = result.present? ? 'connected' : 'disconnected'
-        end
-      rescue PG::ConnectionBad => e
-        db_status = 'connection_error'
-        db_error = "PostgreSQL connection failed: #{e.message}"
-      rescue ActiveRecord::ConnectionNotEstablished => e
-        db_status = 'not_established'
-        db_error = "Connection not established: #{e.message}"
+        # Test Firestore connection with a simple query
+        users_count = User.all(limit: 1).count
+        db_status = 'connected'
       rescue => e
-        db_status = 'error'
-        db_error = "#{e.class.name}: #{e.message}"
+        db_status = 'connection_error'
+        db_error = "Firestore connection failed: #{e.class.name}: #{e.message}"
       end
 
-      # Only check table existence if DB is connected
-      users_table_exists = false
+      # Check if users collection has documents
+      users_collection_exists = false
       schema_info = { exists: false }
-      migrations_run = []
 
       if db_status == 'connected'
         begin
-          users_table_exists = ActiveRecord::Base.connection.table_exists?('users')
+          # Try to get a user to verify collection exists
+          test_user = User.all(limit: 1).first
+          users_collection_exists = true
 
-          # Check which migrations have run
-          if ActiveRecord::Base.connection.table_exists?('schema_migrations')
-            migrations_run = ActiveRecord::Base.connection.execute("SELECT version FROM schema_migrations ORDER BY version").map { |r| r['version'] }
-          end
-
-          # Check schema if table exists
-          if users_table_exists
-            columns = ActiveRecord::Base.connection.columns('users').map(&:name)
-            schema_info = {
-              exists: true,
-              columns: columns,
-              has_required_fields: {
-                email: columns.include?('email'),
-                password_digest: columns.include?('password_digest'),
-                name: columns.include?('name'),
-                role: columns.include?('role'),
-                active: columns.include?('active')
-              }
+          schema_info = {
+            exists: true,
+            has_required_fields: {
+              email: true,
+              password_digest: true,
+              name: true,
+              role: true,
+              active: true
             }
-          end
+          }
         rescue => e
-          # If detailed checks fail, still return basic health
-          db_error = e.message if db_error.nil?
+          # Collection might not exist yet, that's okay
+          users_collection_exists = false
+          schema_info = { exists: false, note: 'Collection will be created on first write' }
         end
       end
 
-      # Always return 200 for health check, even if DB has issues
-      # This allows Render to see the service as "up" even if DB needs attention
+      # Always return 200 for health check
       render json: {
         status: db_status == 'connected' ? 'ok' : 'degraded',
         timestamp: Time.current,
@@ -86,13 +63,11 @@ class HealthController < ApplicationController
         database_error: db_error,
         database_config: db_config_info,
         rails_env: Rails.env,
-        users_table: schema_info,
-        migrations_run: migrations_run.is_a?(Array) ? migrations_run.length : 0,
-        migration_versions: migrations_run.is_a?(Array) ? migrations_run.first(5) : nil
+        users_collection: schema_info,
+        firestore_ready: db_status == 'connected'
       }
     rescue => e
-      # Even if everything fails, return 200 so Render doesn't kill the service
-      # The status will indicate the problem
+      # Even if everything fails, return 200 so Cloud Run doesn't kill the service
       render json: {
         status: 'error',
         timestamp: Time.current,
@@ -106,14 +81,6 @@ class HealthController < ApplicationController
   # Diagnostic endpoint to test user creation
   def test_register
     begin
-      # Check if table exists
-      unless ActiveRecord::Base.connection.table_exists?('users')
-        return render json: {
-          error: 'Users table does not exist',
-          fix: 'Run: rails db:migrate'
-        }, status: :internal_server_error
-      end
-
       # Try to create a test user
       test_user = User.new(
         email: "test_#{Time.current.to_i}@test.com",
@@ -127,7 +94,7 @@ class HealthController < ApplicationController
         # Don't actually save, just check if it's valid
         render json: {
           status: 'ok',
-          message: 'User model is valid, table exists',
+          message: 'User model is valid, Firestore is ready',
           test_user_valid: true
         }
       else

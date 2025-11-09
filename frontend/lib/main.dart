@@ -20,17 +20,8 @@ import 'package:bootiehunter/screens/prompts_config_screen.dart';
 import 'package:bootiehunter/services/prompt_service.dart';
 import 'package:flutter/foundation.dart';
 
-// API Configuration
-// Uses production URL when running on web, localhost for development
-String getApiBaseUrl() {
-  if (kIsWeb) {
-    // Production API URL for web deployment
-    return 'https://reed-bootie-hunter-v1-1.onrender.com/api/v1';
-  } else {
-    // Local development URL
-    return 'http://localhost:3000/api/v1';
-  }
-}
+// API Configuration is now handled by ApiConfig class
+// See lib/config/api_config.dart for configuration details
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +36,7 @@ class BootieHunterApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<ApiService>(
-          create: (_) => ApiService(baseUrl: getApiBaseUrl()),
+          create: (_) => ApiService(), // Uses ApiConfig.baseUrl automatically
         ),
         Provider<BootieService>(
           create: (context) => BootieService(

@@ -11,16 +11,18 @@
 // @see docs/API.md for API endpoint documentation
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 
 class ApiService {
   final Dio _dio;
   final String baseUrl;
 
-  // Initialize API service with base URL
+  // Initialize API service with base URL from ApiConfig
   // Sets up Dio with default headers and interceptors
-  ApiService({required this.baseUrl})
-      : _dio = Dio(BaseOptions(
-          baseUrl: baseUrl,
+  ApiService({String? baseUrl})
+      : baseUrl = baseUrl ?? ApiConfig.baseUrl,
+        _dio = Dio(BaseOptions(
+          baseUrl: baseUrl ?? ApiConfig.baseUrl,
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',

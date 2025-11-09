@@ -1,0 +1,31 @@
+# Cloud Build Trigger Configuration
+# Use this file to create triggers via gcloud CLI or Cloud Console
+
+# Backend Trigger
+backend_trigger:
+  name: deploy-backend
+  description: Deploy backend on push to main
+  github:
+    owner: tlcmonkshawn
+    name: ReedRefactorV1
+    push:
+      branch: ^main$
+  filename: cloudbuild.yaml
+  substitutions:
+    _SERVICE_NAME: reed-refactor-v1-backend
+    _REGION: us-west1
+
+# Frontend Trigger
+frontend_trigger:
+  name: deploy-frontend
+  description: Deploy frontend on push to main
+  github:
+    owner: tlcmonkshawn
+    name: ReedRefactorV1
+    push:
+      branch: ^main$
+  filename: frontend/cloudbuild.yaml
+  substitutions:
+    _SERVICE_NAME: reed-refactor-v1-frontend
+    _REGION: us-west1
+

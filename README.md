@@ -22,9 +22,10 @@ Transform routine thrift store operations (inventory management, price research,
 **Goal:** Ensure the base system works perfectly as designed
 
 1. **Backend Validation**
-   - ✅ Backend is LIVE on Render.com
+   - ✅ Backend migrated to Google Cloud Run
+   - ✅ Firestore database configured
    - [ ] Verify all API endpoints
-   - [ ] Test database migrations
+   - [ ] Test Firestore setup and seeding
    - [ ] Validate authentication flow
    - [ ] Test Square integration
    - [ ] Test Discogs integration
@@ -157,9 +158,9 @@ Transform routine thrift store operations (inventory management, price research,
 
 ### Backend
 - **Framework:** Ruby on Rails 8.1.1
-- **Database:** PostgreSQL 18.0
+- **Database:** Firestore (Native mode)
 - **Background Jobs:** Sidekiq + Redis
-- **Deployment:** Render.com
+- **Deployment:** Google Cloud Run
 - **Storage:** Google Cloud Storage
 
 ### Frontend
@@ -210,6 +211,7 @@ ReedRefactorV1/
 
 ## Current Status
 
+- **GCP Migration:** ✅ Complete (Backend and Frontend migrated to Cloud Run)
 - **Phase 1:** 🟡 In Progress (Backend validated, Frontend needs testing)
 - **Phase 2:** ⏳ Planned
 - **Phase 3:** ⏳ Planned
@@ -222,14 +224,30 @@ ReedRefactorV1/
 ### Prerequisites
 - Ruby 3.0+
 - Rails 8.1.1+
-- PostgreSQL 12+
 - Flutter 3.16+
-- Redis (for background jobs)
+- Google Cloud SDK (for deployment)
+- Docker (for local testing)
 
 ### Setup
+
+#### Local Development
 1. Clone this repository
-2. Follow setup instructions in root directory (Rails app) and `frontend/` directory
-3. See `docs/` for detailed documentation
+2. Install dependencies: `bundle install`
+3. Set up Firestore credentials (see `docs/deployment/gcp-setup.md`)
+4. Run seed task: `rake firestore:seed`
+5. Start Rails server: `rails server`
+6. For Flutter frontend, see `frontend/README.md`
+
+#### Production Deployment
+1. See `docs/deployment/gcp-setup.md` for complete deployment guide
+2. See `GCP_MIGRATION_CHECKLIST.md` for step-by-step checklist
+3. See `TESTING_PLAN.md` for testing procedures
+
+### Deployment
+- **Backend:** Deployed to Google Cloud Run
+- **Frontend:** Deployed to Google Cloud Run
+- **Database:** Firestore (Native mode)
+- **Storage:** Google Cloud Storage
 
 ---
 

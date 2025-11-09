@@ -15,16 +15,25 @@ module Api
       # List all Booties with optional filtering
       # Non-admin users only see their own Booties unless user_id filter is specified (admin only)
       def index
-        booties = Bootie.all
-        booties = booties.by_status(params[:status]) if params[:status].present?
-        booties = booties.by_category(params[:category]) if params[:category].present?
-        booties = booties.by_location(params[:location_id]) if params[:location_id].present?
-        booties = booties.where(user_id: params[:user_id]) if params[:user_id].present?
-        
-        # Default to current user's booties if no filter
-        booties = booties.where(user_id: current_user.id) unless params[:user_id].present? || current_user.admin?
+        booties = if params[:user_id].present? && current_user.admin?
+          Bootie.where(:user_id, params[:user_id]).get
+        elsif params[:user_id].present?
+          # Non-admin can't filter by other users
+          []
+        else
+          # Default to current user's booties
+          Bootie.where(:user_id, current_user.id).get
+        end
 
-        render json: booties.order(created_at: :desc)
+        # Apply additional filters
+        booties = booties.select { |b| b.status == params[:status] } if params[:status].present?
+        booties = booties.select { |b| b.category == params[:category] } if params[:category].present?
+        booties = booties.select { |b| b.location_id == params[:location_id] } if params[:location_id].present?
+
+        # Sort by created_at descending
+        booties = booties.sort_by { |b| b.created_at || Time.at(0) }.reverse
+
+        render json: booties.map { |b| bootie_serializer(b) }
       end
 
       def show
@@ -32,7 +41,8 @@ module Api
       end
 
       def create
-        bootie = current_user.booties.build(bootie_params)
+        bootie = Bootie.new(bootie_params)
+        bootie.user_id = current_user.id
         
         if bootie.save
           render json: bootie_serializer(bootie), status: :created
@@ -98,37 +108,41 @@ module Api
           recommended_bounty: @bootie.recommended_bounty,
           research_summary: @bootie.research_summary,
           research_reasoning: @bootie.research_reasoning,
-          research_completed_at: @bootie.research_completed_at
+          research_completed_at: @bootie.research_completed_at,
+          status: @bootie.status
         }
       end
 
-      # GET /api/v1/booties/:id/research/logs
-      # Get detailed research logs for a Bootie
-      # Returns array of research_log records showing the research process
+      # GET /api/v1/booties/:id/research_logs
+      # Get research logs for a Bootie
       def research_logs
-        render json: @bootie.research_logs.order(created_at: :desc)
+        logs = @bootie.research_logs
+        render json: logs.map { |log| research_log_serializer(log) }
       end
 
-      # GET /api/v1/booties/:id/research/sources
-      # Get grounding sources (citations) for research
-      # Returns array of source URLs, titles, and snippets
+      # GET /api/v1/booties/:id/grounding_sources
+      # Get grounding sources (research citations) for a Bootie
       def grounding_sources
-        render json: @bootie.grounding_sources
+        sources = @bootie.grounding_sources
+        render json: sources.map { |source| grounding_source_serializer(source) }
       end
 
       private
 
-      # Set @bootie from params and check authorization
-      # Users can only access their own Booties unless they're admin
       def set_bootie
         @bootie = Bootie.find(params[:id])
-        unless @bootie.user_id == current_user.id || current_user.admin?
-          render_error("Not authorized", code: 'FORBIDDEN', status: :forbidden)
+        return render_unauthorized unless @bootie
+        
+        # Check authorization: users can only access their own booties unless admin
+        unless current_user.admin? || @bootie.user_id == current_user.id
+          return render_unauthorized
         end
+      rescue FirestoreModel::DocumentNotFound
+        render json: { error: { message: 'Bootie not found', code: 'NOT_FOUND' } }, status: :not_found
       end
 
       def bootie_params
-        params.require(:bootie).permit(:title, :description, :category, :location_id, :primary_image_url, alternate_image_urls: [])
+        params.require(:bootie).permit(:title, :description, :category, :location_id, :primary_image_url, :alternate_image_urls, :edited_image_urls)
       end
 
       def bootie_serializer(bootie)
@@ -138,20 +152,45 @@ module Api
           description: bootie.description,
           category: bootie.category,
           status: bootie.status,
+          user_id: bootie.user_id,
+          location_id: bootie.location_id,
+          primary_image_url: bootie.primary_image_url,
+          alternate_image_urls: bootie.alternate_image_urls || [],
+          edited_image_urls: bootie.edited_image_urls || [],
           recommended_bounty: bootie.recommended_bounty,
           final_bounty: bootie.final_bounty,
-          primary_image_url: bootie.primary_image_url,
-          alternate_image_urls: bootie.alternate_image_urls,
-          edited_image_urls: bootie.edited_image_urls,
-          location: {
-            id: bootie.location.id,
-            name: bootie.location.name
-          },
+          research_summary: bootie.research_summary,
+          research_reasoning: bootie.research_reasoning,
+          square_product_id: bootie.square_product_id,
+          square_variation_id: bootie.square_variation_id,
           created_at: bootie.created_at,
+          updated_at: bootie.updated_at,
           finalized_at: bootie.finalized_at
+        }
+      end
+
+      def research_log_serializer(log)
+        {
+          id: log.id,
+          query: log.query,
+          response: log.response,
+          research_method: log.research_method,
+          success: log.success,
+          error_message: log.error_message,
+          created_at: log.created_at
+        }
+      end
+
+      def grounding_source_serializer(source)
+        {
+          id: source.id,
+          title: source.title,
+          url: source.url,
+          snippet: source.snippet,
+          source_type: source.source_type,
+          created_at: source.created_at
         }
       end
     end
   end
 end
-

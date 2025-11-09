@@ -4,10 +4,21 @@
 # Supports multiple categories: system_instructions, image_processing, research, chat, game_modes, tool_functions
 #
 # @see AI_PROMPTS.json for the source of initial prompts
-class Prompt < ApplicationRecord
-  # Validations
+class Prompt < FirestoreModel
+  attribute :category, :string
+  attribute :name, :string
+  attribute :model, :string
+  attribute :prompt_text, :string
+  attribute :prompt_type, :string
+  attribute :description, :string
+  attribute :active, :boolean, default: true
+  attribute :sort_order, :integer, default: 0
+  attribute :version, :integer, default: 1
+  attribute :metadata, default: {}
+  attribute :use_case, :string
+
   validates :category, presence: true
-  validates :name, presence: true, uniqueness: { scope: :category }
+  validates :name, presence: true
   validates :model, presence: true
   validates :prompt_text, presence: true
   validates :category, inclusion: { 
@@ -18,65 +29,74 @@ class Prompt < ApplicationRecord
     in: %w[system_instruction prompt_template tool_function],
     allow_blank: true
   }
+  validate :name_uniqueness_within_category, on: :create
 
-  # Scopes
-  scope :active, -> { where(active: true) }
-  scope :by_category, ->(category) { where(category: category) }
-  scope :by_model, ->(model) { where(model: model) }
-  scope :ordered, -> { order(:sort_order, :name) }
+  before_update :increment_version, if: :prompt_text_changed?
+  after_save :reload_cache
+  after_destroy :reload_cache
 
-  # Class method to get prompt by category and name
+  def self.active
+    where(:active, true).get
+  end
+
+  def self.by_category(category)
+    where(:category, category).get
+  end
+
+  def self.by_model(model)
+    where(:model, model).get
+  end
+
+  def self.ordered
+    # Firestore doesn't support multiple order by easily, so we sort in Ruby
+    all.sort_by { |p| [p.sort_order || 0, p.name || ''] }
+  end
+
   def self.get(category:, name:)
-    active.find_by(category: category, name: name)
+    active.find { |p| p.category == category && p.name == name }
   end
 
-  # Class method to get all prompts for a category
   def self.for_category(category)
-    active.where(category: category).ordered
+    active.select { |p| p.category == category }.sort_by { |p| [p.sort_order || 0, p.name || ''] }
   end
 
-  # Check if this is a system instruction
   def system_instruction?
     prompt_type == 'system_instruction' || category == 'system_instructions'
   end
 
-  # Check if this is a prompt template
   def prompt_template?
     prompt_type == 'prompt_template'
   end
 
-  # Check if this is a tool function
   def tool_function?
     prompt_type == 'tool_function' || category == 'tool_functions'
   end
 
-  # Get metadata as hash (handles JSON column)
   def metadata_hash
     metadata.is_a?(Hash) ? metadata : (metadata || {})
   end
 
-  # Increment version when updated
-  before_update :increment_version, if: :prompt_text_changed?
-  
-  # Reload cache after save/destroy
-  after_save :reload_cache
-  after_destroy :reload_cache
-
   private
 
+  def name_uniqueness_within_category
+    existing = self.class.where(:category, category).where(:name, name).first
+    if existing && existing.id != id
+      errors.add(:name, "has already been taken in this category")
+    end
+  end
+
   def increment_version
-    self.version += 1
+    self.version = (version || 1) + 1
   end
 
   def reload_cache
     # Reload cache in background to avoid blocking the request
     Thread.new do
       begin
-        PromptCacheService.reload
+        PromptCacheService.reload if defined?(PromptCacheService)
       rescue => e
         Rails.logger.error "Failed to reload prompt cache: #{e.message}"
       end
     end
   end
 end
-

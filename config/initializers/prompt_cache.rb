@@ -3,13 +3,10 @@
 
 Rails.application.config.after_initialize do
   begin
-    # Only load if database is available and prompts table exists
-    if ActiveRecord::Base.connection.table_exists?('prompts')
-      PromptCacheService.load!
-      Rails.logger.info "PromptCacheService initialized successfully"
-    else
-      Rails.logger.warn "PromptCacheService: prompts table does not exist, skipping cache load"
-    end
+    # Load prompts from Firestore
+    # Firestore collections are created automatically on first write
+    PromptCacheService.load!
+    Rails.logger.info "PromptCacheService initialized successfully"
   rescue => e
     Rails.logger.error "PromptCacheService initialization failed: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
