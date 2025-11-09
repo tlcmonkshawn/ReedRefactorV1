@@ -26,20 +26,20 @@ else
   echo "   First 30 chars: ${DATABASE_URL:0:30}..."
   
   # Ensure SSL mode is set for Render PostgreSQL
-  # The issue is likely certificate verification - try different SSL modes
-  # Remove any existing sslmode and try allow (most lenient - tries SSL, falls back if needed)
-  if [[ "$DATABASE_URL" == *"sslmode"* ]]; then
-    # Remove existing sslmode parameter
-    export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's/[?&]sslmode=[^&]*//' | sed 's/sslmode=[^&]*[&]/\&/' | sed 's/sslmode=[^&]*$//')
-  fi
+  # Use verify-ca with certificate bundle for proper SSL verification
+  # The certificate bundle is in config/ca-certificates.crt
+  CERT_PATH="/opt/render/project/config/ca-certificates.crt"
   
-  # Add sslmode=allow (tries SSL, falls back to non-SSL if certificate issues)
+  # Remove any existing sslmode and sslrootcert parameters
+  export DATABASE_URL=$(echo "$DATABASE_URL" | sed 's/[?&]sslmode=[^&]*//g' | sed 's/[?&]sslrootcert=[^&]*//g')
+  
+  # Add sslmode=verify-ca and sslrootcert
   separator="?"
   if [[ "$DATABASE_URL" == *"?"* ]]; then
     separator="&"
   fi
-  export DATABASE_URL="${DATABASE_URL}${separator}sslmode=allow"
-  echo "   Set sslmode=allow (tries SSL, falls back if certificate issues)"
+  export DATABASE_URL="${DATABASE_URL}${separator}sslmode=verify-ca&sslrootcert=${CERT_PATH}"
+  echo "   Set sslmode=verify-ca with certificate bundle at ${CERT_PATH}"
   
   # Export DATABASE_URL so it's available to all child processes
   export DATABASE_URL
