@@ -82,15 +82,14 @@ fi
 
 echo "✅ In Rails root directory: $(pwd)"
 
-# Run migrations - use rails runner to load a Ruby script file (avoids shell quoting issues)
+# Run migrations - use rake db:migrate directly (more reliable than rails runner)
 echo ""
 echo "Running database migrations..."
 echo "Using DATABASE_URL: ${DATABASE_URL:0:30}..."
-echo "Executing migration command: Using rails runner with migration script..."
 set +e  # Temporarily disable exit on error to capture exit code
 
-# Load and execute the migration script (same pattern as migrations_controller.rb)
-RAILS_ENV=production DATABASE_URL="$DATABASE_URL" timeout 120 bundle exec rails runner "load Rails.root.join('lib', 'tasks', 'run_migrations.rb')" 2>&1
+# Run migrations directly using rake
+RAILS_ENV=production DATABASE_URL="$DATABASE_URL" timeout 120 bundle exec rake db:migrate 2>&1
 MIGRATE_EXIT=$?
 
 set -e  # Re-enable exit on error
@@ -98,10 +97,10 @@ set -e  # Re-enable exit on error
 # Check migration exit code
 if [ $MIGRATE_EXIT -ne 0 ]; then
   echo ""
-  echo "❌ Migration via rails runner failed with exit code $MIGRATE_EXIT"
-  echo "Trying alternative: bundle exec rake db:migrate"
+  echo "❌ Migration failed with exit code $MIGRATE_EXIT"
+  echo "Attempting alternative: rails runner with migration script..."
   set +e
-  RAILS_ENV=production DATABASE_URL="$DATABASE_URL" timeout 120 bundle exec rake db:migrate 2>&1
+  RAILS_ENV=production DATABASE_URL="$DATABASE_URL" timeout 120 bundle exec rails runner "load Rails.root.join('lib', 'tasks', 'run_migrations.rb')" 2>&1
   MIGRATE_EXIT=$?
   set -e
   if [ $MIGRATE_EXIT -ne 0 ]; then
