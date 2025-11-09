@@ -14,8 +14,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_01_27_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-
-
   create_table "achievements", force: :cascade do |t|
     t.string "achievement_type"
     t.boolean "active", default: true, null: false
@@ -167,4 +165,78 @@ ActiveRecord::Schema[8.1].define(version: 2025_01_27_000001) do
     t.index ["name"], name: "index_prompts_on_name"
     t.index ["prompt_type"], name: "index_prompts_on_prompt_type"
   end
+
+  create_table "research_logs", force: :cascade do |t|
+    t.bigint "bootie_id", null: false
+    t.text "query"
+    t.text "response"
+    t.string "research_method"
+    t.text "raw_data"
+    t.boolean "success", default: true, null: false
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bootie_id"], name: "index_research_logs_on_bootie_id"
+    t.index ["created_at"], name: "index_research_logs_on_created_at"
+  end
+
+  create_table "scores", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "action_type", null: false
+    t.integer "points", null: false
+    t.bigint "bootie_id"
+    t.bigint "game_session_id"
+    t.text "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action_type"], name: "index_scores_on_action_type"
+    t.index ["bootie_id"], name: "index_scores_on_bootie_id"
+    t.index ["created_at"], name: "index_scores_on_created_at"
+    t.index ["game_session_id"], name: "index_scores_on_game_session_id"
+    t.index ["user_id"], name: "index_scores_on_user_id"
+  end
+
+  create_table "user_achievements", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "achievement_id", null: false
+    t.datetime "earned_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["achievement_id"], name: "index_user_achievements_on_achievement_id"
+    t.index ["user_id", "achievement_id"], name: "index_user_achievements_on_user_id_and_achievement_id", unique: true
+    t.index ["user_id"], name: "index_user_achievements_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "password_digest", null: false
+    t.string "name", null: false
+    t.string "role", null: false, default: "agent"
+    t.string "phone_number"
+    t.string "avatar_url"
+    t.boolean "active", default: true, null: false
+    t.datetime "last_login_at"
+    t.integer "total_points", default: 0, null: false
+    t.integer "total_items_scanned", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["role"], name: "index_users_on_role"
+    t.index ["total_points"], name: "index_users_on_total_points"
+  end
+
+  add_foreign_key "booties", "locations"
+  add_foreign_key "booties", "users"
+  add_foreign_key "conversations", "users"
+  add_foreign_key "game_sessions", "users"
+  add_foreign_key "grounding_sources", "booties"
+  add_foreign_key "grounding_sources", "research_logs"
+  add_foreign_key "leaderboards", "users"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "research_logs", "booties"
+  add_foreign_key "scores", "booties"
+  add_foreign_key "scores", "game_sessions"
+  add_foreign_key "scores", "users"
+  add_foreign_key "user_achievements", "achievements"
+  add_foreign_key "user_achievements", "users"
 end
