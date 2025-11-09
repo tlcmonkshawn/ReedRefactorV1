@@ -182,12 +182,16 @@ Transform routine thrift store operations (inventory management, price research,
 
 ```
 ReedRefactorV1/
-├── backend/              # Rails backend (from Bootie Hunter V1)
-│   ├── app/
-│   ├── config/
-│   ├── db/
-│   └── ...
-├── frontend/             # Flutter frontend (from Bootie Hunter V1)
+├── app/                  # Rails application
+│   ├── controllers/
+│   ├── models/
+│   ├── services/
+│   └── views/
+├── config/               # Rails configuration
+├── db/                   # Database migrations and schema
+├── lib/                  # Rails libraries
+├── scripts/              # Utility scripts
+├── frontend/             # Flutter frontend (separate)
 │   ├── lib/
 │   ├── pubspec.yaml
 │   └── ...
@@ -224,7 +228,7 @@ ReedRefactorV1/
 
 ### Setup
 1. Clone this repository
-2. Follow setup instructions in `backend/` and `frontend/` directories
+2. Follow setup instructions in root directory (Rails app) and `frontend/` directory
 3. See `docs/` for detailed documentation
 
 ---

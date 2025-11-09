@@ -39,7 +39,7 @@ redis-cli ping
 Navigate to `backend/` directory and create `.env` file:
 
 ```bash
-cd backend
+# Rails app is now in root directory
 copy .env.example .env
 # Then edit .env with your PostgreSQL password
 ```
@@ -59,7 +59,7 @@ JWT_SECRET_KEY=run_rails_secret_to_generate
 
 **Generate secrets:**
 ```bash
-cd backend
+# Rails app is now in root directory
 rails secret
 # Copy the output and use for SECRET_KEY_BASE and JWT_SECRET_KEY
 ```
@@ -67,7 +67,7 @@ rails secret
 ### 4. Set Up Database
 
 ```bash
-cd backend
+# Rails app is now in root directory
 bundle install
 rails db:create
 rails db:migrate
@@ -81,7 +81,7 @@ rails db:migrate
 ### 5. Test Backend
 
 ```bash
-cd backend
+# Rails app is now in root directory
 rails server
 ```
 

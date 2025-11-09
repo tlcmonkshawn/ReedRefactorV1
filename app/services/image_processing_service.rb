@@ -253,32 +253,28 @@ class ImageProcessingService < ApplicationService
   # @return [ServiceResult] Result with URL on success
   def upload_edited_image(image_data)
     require 'google/cloud/storage'
+    require 'json'
 
     begin
-      bucket_name = ENV['GOOGLE_CLOUD_STORAGE_BUCKET'] || 'bootiehunter-v1-images'
-      service_account_path = Rails.root.join('config', 'service-account-key.json')
+      # Validate configuration
+      bucket_name = ENV['GOOGLE_CLOUD_STORAGE_BUCKET']
+      project_id = ENV['GOOGLE_CLOUD_PROJECT_ID']
+      credentials_json = ENV['GOOGLE_APPLICATION_CREDENTIALS_JSON']
+
+      if bucket_name.blank? || project_id.blank? || credentials_json.blank?
+        return failure(
+          "Google Cloud Storage not configured. Required: GOOGLE_CLOUD_STORAGE_BUCKET, " \
+          "GOOGLE_CLOUD_PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS_JSON",
+          'CONFIG_ERROR'
+        )
+      end
 
       # Initialize storage
-      # Priority 1: Service account JSON from environment variable (preferred for production/Render)
-      storage = if ENV['GOOGLE_APPLICATION_CREDENTIALS_JSON'].present?
-        require 'json'
-        credentials_hash = JSON.parse(ENV['GOOGLE_APPLICATION_CREDENTIALS_JSON'])
-        Google::Cloud::Storage.new(
-          project_id: ENV['GOOGLE_CLOUD_PROJECT_ID'],
-          credentials: credentials_hash
-        )
-      # Priority 2: Service account key file (for local development)
-      elsif File.exist?(service_account_path)
-        Google::Cloud::Storage.new(
-          project_id: ENV['GOOGLE_CLOUD_PROJECT_ID'],
-          credentials: service_account_path
-        )
-      # Priority 3: Default credentials (for GKE/GCE with IAM roles)
-      elsif ENV['GOOGLE_CLOUD_PROJECT_ID'].present?
-        Google::Cloud::Storage.new(project_id: ENV['GOOGLE_CLOUD_PROJECT_ID'])
-      else
-        return failure("Google Cloud Storage not configured", 'CONFIG_ERROR')
-      end
+      credentials_hash = JSON.parse(credentials_json)
+      storage = Google::Cloud::Storage.new(
+        project_id: project_id,
+        credentials: credentials_hash
+      )
 
       # Decode base64 image
       image_bytes = Base64.decode64(image_data)
@@ -290,6 +286,8 @@ class ImageProcessingService < ApplicationService
 
       # Upload to bucket
       bucket = storage.bucket(bucket_name)
+      return failure("Bucket '#{bucket_name}' not found or not accessible", 'BUCKET_ERROR') unless bucket
+
       file = bucket.create_file(
         StringIO.new(image_bytes),
         filename,
@@ -301,8 +299,15 @@ class ImageProcessingService < ApplicationService
 
       url = "https://storage.googleapis.com/#{bucket_name}/#{filename}"
       success(url: url, filename: filename)
+    rescue JSON::ParserError => e
+      Rails.logger.error("ImageProcessingService: Invalid JSON in GOOGLE_APPLICATION_CREDENTIALS_JSON")
+      failure("Invalid credentials JSON: #{e.message}", 'CREDENTIALS_ERROR')
+    rescue Google::Cloud::Error => e
+      Rails.logger.error("ImageProcessingService: Google Cloud error: #{e.message}")
+      failure("Google Cloud Storage error: #{e.message}", 'GCS_ERROR')
     rescue StandardError => e
-      Rails.logger.error("ImageProcessingService.upload_edited_image error: #{e.message}")
+      Rails.logger.error("ImageProcessingService.upload_edited_image error: #{e.class}: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n"))
       failure("Failed to upload edited image: #{e.message}", 'UPLOAD_ERROR')
     end
   end
